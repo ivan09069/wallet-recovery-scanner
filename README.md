@@ -1,47 +1,23 @@
-# wallet-recovery-scanner
+# Wallet artifact inventory
 
-Proper seed phrase and private key scanner for local filesystems. Designed for Termux on Android and Linux.
+Read-only heuristic scanning for mnemonic-like text, 64-character hex values,
+WIF-like strings, and JSON keystores. Output contains only paths, line numbers,
+types, counts, and a completion summary. It never prints matched values or previews.
+A match does not prove a valid wallet, mnemonic checksum, ownership, or balance.
 
-Unlike naive scanners that grep for individual BIP39 words (producing thousands of false positives), this tool scans for:
+Requires Bash and Python 3, with no external packages. Example:
 
-1. **Real mnemonic sequences** — 12/15/18/21/24 consecutive lowercase words
-2. **Hex private keys** — `0x` + 64 hex characters
-3. **Raw hex keys** — 64-char hex strings in config files
-4. **Bitcoin WIF keys** — Base58 format (5/K/L prefix)
-5. **JSON keystores** — Ethereum encrypted keystore files
-6. **Environment variables** — `PRIVATE_KEY=`, `SEED=`, `MNEMONIC=` in `.env` files
-
-## Usage
-
-```bash
-# Default: scans $HOME and /sdcard
-bash proper_seed_scan.sh
-
-# Custom directories
-SCAN_DIRS="/path/to/scan" bash proper_seed_scan.sh
-
-# Save results
-bash proper_seed_scan.sh 2>&1 | tee ~/scan_results.txt
+```sh
+bash proper_seed_scan.sh "$HOME/storage/downloads"
 ```
 
-## Termux (Android)
+Pass one or more explicit, quoted paths. With no arguments, the scanner uses
+`SCAN_DIRS` (shell-style quoted paths) or the legacy home/Android defaults.
+Archives, binary files, symlinks, and files larger than 10 MiB are skipped.
+Missing/unreadable locations are counted. No result file is written; the old
+`RESULTS_FILE` variable is no longer used. Preserve any prior scan outputs locally;
+they may contain sensitive values from earlier versions.
 
-```bash
-pkg install -y git
-git clone https://github.com/ivan09069/wallet-recovery-scanner.git
-cd wallet-recovery-scanner
-bash proper_seed_scan.sh 2>&1 | tee ~/scan_results.txt
+```sh
+python3 -m unittest -v test_privacy.py
 ```
-
-## What it does NOT do
-
-- Does not transmit any data
-- Does not validate keys against any blockchain
-- Does not derive addresses from found seeds
-- Does not store or cache results anywhere except stdout
-
-All scanning is local, read-only, and offline-safe.
-
-## License
-
-MIT
